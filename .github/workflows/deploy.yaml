@@ -3,19 +3,29 @@ name: Deploy to PythonAnywhere
 on:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v2
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-      - name: Deploy to PythonAnywhere
-        uses: jensvog/pythonanywhere-deploy-action@v1.4
+      - name: Upload Files to PythonAnywhere
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          PA_USERNAME: ${{ secrets.PA_USERNAME }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ssh.pythonanywhere.com >> ~/.ssh/known_hosts
+          rsync -avz --exclude '.git*' ./ $PA_USERNAME@ssh.pythonanywhere.com:/home/$PA_USERNAME/myproject/
+
+      - name: Reload PythonAnywhere Web App
+        uses: jensvog/pythonanywhere-webapp-reload-action@v1
         with:
-          api_token: ${{ secrets.PA_API_TOKEN }}
           username: ${{ secrets.PA_USERNAME }}
-          src_path: '.'
-          dest_path: '/home/${{ secrets.PA_USERNAME }}/kosta_schedule_bot/'
+          api-token: ${{ secrets.PA_API_TOKEN }}
+          domain-name: ${{ secrets.PA_USERNAME }}.pythonanywhere.com
