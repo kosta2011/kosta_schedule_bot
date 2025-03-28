@@ -1,0 +1,21 @@
+name: Deploy to PythonAnywhere
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Deploy to PythonAnywhere
+        uses: jensvog/pythonanywhere-deploy-action@v1.4
+        with:
+          api_token: ${{ secrets.PA_API_TOKEN }}
+          username: ${{ secrets.PA_USERNAME }}
+          src_path: '.'
+          dest_path: '/home/${{ secrets.PA_USERNAME }}/kosta_schedule_bot/'
